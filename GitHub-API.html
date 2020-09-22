@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub API</title>
+    <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css">
+    <script src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary mb-3">
+        <div class="container">
+            <a href="#" class="navbar-brand">Git Hub API Example</a>
+        </div>
+    </nav>
+
+    <div class="container searchContainer">
+        <div class="search card card-body">
+            <h1>Search Github API</h1>
+            <p class="lead">Enter a user profile name:</p>
+            <input type="text" id="username" class="form-control" placeholder="Enter a Github username...">
+        </div>
+    </div>
+
+    <br>
+    <div class="container searchContainer">
+        <div id="profile"></div>
+    </div>
+    
+
+    <script>
+        class UI{
+            constructor(){
+                this.profile = document.getElementById("profile");      
+            }
+
+            //display profile
+            showProfile(user){
+                this.profile.innerHTML = `
+                <div class="card card-body mb-3">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img class="img-fluid mb-3" src="${user.avatar_url}">
+                            <a href="${user.html_url}" class="btn btn-primary btn-block mb-2" target="_blank">View Profile</a>
+                        </div>
+                        <div class="col-md-5">
+                            <span class="badge badge-primary">Public Repos: ${user.public_repos}</span>
+                            <span class="badge badge-primary">Public Gists: ${user.public_gists}</span>
+                            <span class="badge badge-primary">Followers: ${user.followers}</span>
+                            <span class="badge badge-primary">Following: ${user.following}</span>
+                            <br><br>
+                            <ul class="list-group">
+                                <li class="list-group-item">Name: ${user.name}</li>
+                                <li class="list-group-item">Bio: ${user.bio}</li>
+                                <li class="list-group-item">Company: ${user.company}</li>
+                                <li class="list-group-item">Website: ${user.blog}</li>
+                                <li class="list-group-item">Location: ${user.location}</li>
+                                <li class="list-group-item">Member Since: ${user.created_at}</li>
+                            </ul>                            
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            clearProfile(){
+                this.profile.innerHTML = '';
+            }
+
+            showAlert(message, className){                
+                //clear any remaining alerts
+                this.clearAlertMessage();
+
+                /*// Code using the normal javascript
+                //Create new HTML element (div)
+                const div = document.createElement('div');
+
+                //add class to element
+                div.className = className;
+                div.appendChild(document.createTextNode(message));
+
+                //get parent
+                const container = document.querySelector(".searchContainer");
+
+                //get search box
+                const search = document.querySelector(".search");
+
+                //insert the alert mesasge
+                container.insertBefore(div,search);*/
+
+                // Doing the same with the jQuery
+                var divTag = $('<div>', {
+                    class: className,
+                    text: message
+                });
+                divTag.insertBefore($('.search'));   
+            }
+
+            clearAlertMessage(){
+                const currentAlert = document.querySelector('.alert');
+
+                if(currentAlert){
+                    currentAlert.remove();
+                }
+            }
+        }
+
+        class Github{
+            constructor(){
+                //TODO: To get unlimited access to the gitHub API
+                // provide the client id and the client secret id obtained from GitHub
+                //this.client_id = 'yourclientid';
+                //this.client_secret = 'your secret key id';
+            }
+
+            async getUser(user){
+                // without authentication
+                const profileResponse = await fetch(`https://api.github.com/users/${user}`);
+
+                // TODO: With Authentication
+                // Comment this line when using authentication with client id and secret key
+                //const profileResponse = await fetch(`https://api.github.com/users/${user}?client_id=`+
+                //`${this.client_id}&client_secret=${this.client_secret}`);
+                const profileData = await profileResponse.json();
+                return {profileData};
+            }
+        }
+
+        //Begin Javascript code for processing text in input box
+        //Create an instance of the Github class
+        github = new Github;
+
+        //Cretae an instance for the UI class
+        ui = new UI;        
+
+        //Capture the data from the input textbox
+        const searchUser = document.getElementById("username");
+
+        //Attach an event listener
+        searchUser.addEventListener("keyup", function(e){
+            const userText = e.target.value;
+
+            if(userText !== ''){
+                //connect to github api and get the profile
+                github.getUser(userText).then(data => {
+
+                    if(data.profileData.message === 'Not Found'){                  
+                        //show alert box
+                        ui.showAlert("User Profile is not valid", "alert alert-dismissible alert-danger");
+                         //clear profile
+                        ui.clearProfile();
+
+                    } else{
+                        ui.clearAlertMessage();
+                         //display Profile
+                        ui.showProfile(data.profileData); 
+                        console.log(data);                   
+                    }
+                });
+            }        
+            else{
+                ui.clearAlertMessage();
+                //clear profile
+                ui.clearProfile();
+            }
+        });
+
+    </script>
+</body>
+</html>
